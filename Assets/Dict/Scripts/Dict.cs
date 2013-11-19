@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 public class Dict : ScriptableObject
 {
-    public enum Type { STRING, INTEGER, FLOAT, OBJECT }
+    public enum Type { STRING, INTEGER, FLOAT, OBJECT, COLOR}
 
     [SerializeField]
     private Type keyType = Type.STRING, valueType = Type.STRING;
@@ -19,11 +19,8 @@ public class Dict : ScriptableObject
     private List<float> f_keys, f_values;
     [SerializeField]
     private List<Object> o_keys, o_values;
-
-    void OnEnabled()
-    {
-        name = "Dictionary";
-    }
+    [SerializeField]
+    private List<Color> c_keys, c_values;
 
     public Type KeyType
     {
@@ -37,7 +34,7 @@ public class Dict : ScriptableObject
             keyType = value;
             if (value != oldType)
             {
-                ClearAll();
+                Clear();
             }
         }
     }
@@ -54,7 +51,7 @@ public class Dict : ScriptableObject
             valueType = value;
             if (value != oldType)
             {
-                ClearAll();
+                Clear();
             }
         }
     }
@@ -63,6 +60,7 @@ public class Dict : ScriptableObject
     {
         //acabou de criar o Dict
         //se não estava serializado, inicializa as listas
+
         if (s_keys == null)
         {
             s_keys = new List<string>();
@@ -76,6 +74,9 @@ public class Dict : ScriptableObject
 
             o_keys = new List<Object>();
             o_values = new List<Object>();
+
+            c_keys = new List<Color>();
+            c_values = new List<Color>();
         }
     }
 
@@ -88,12 +89,11 @@ public class Dict : ScriptableObject
     {
         get
         {
-            //Debug.Log("get keycount for " + KeyType + " returning " + GetKeyList().Count);
-            return GetKeyList().Count;
+            return _GetKeyList().Count;
         }
     }
 
-    public IList GetKeyList()
+    public IList _GetKeyList()
     {
         switch (keyType)
         {
@@ -103,11 +103,13 @@ public class Dict : ScriptableObject
                 return i_keys;
             case Type.FLOAT:
                 return f_keys;
+            case Type.COLOR:
+                return c_keys;
         }
         return o_keys;
     }
 
-    public IList GetValueList()
+    private IList GetValueList()
     {
         switch (valueType)
         {
@@ -117,6 +119,8 @@ public class Dict : ScriptableObject
                 return i_values;
             case Type.FLOAT:
                 return f_values;
+            case Type.COLOR:
+                return c_values;
         }
         return o_values;
     }
@@ -125,14 +129,14 @@ public class Dict : ScriptableObject
     {
         
         int index = 0;
-        index = GetKeyList().IndexOf(key);
+        index = _GetKeyList().IndexOf(key);
         object o = GetValueList()[index];
         return o;
     }
 
-    public object GetKeyAt(int index)
+    public object _GetKeyAt(int index)
     {
-        object value = GetKeyList()[index];
+        object value = _GetKeyList()[index];
         if (value == null)
         {
             switch (keyType)
@@ -142,12 +146,14 @@ public class Dict : ScriptableObject
                 case Type.INTEGER:
                 case Type.FLOAT:
                     return 0;
+                case Type.COLOR:
+                    return Color.black;
             }
         }
         return value;
     }
 
-    public object GetValueAt(int index)
+    public object _GetValueAt(int index)
     {
         object value = GetValueList()[index];
         if (value == null)
@@ -159,24 +165,26 @@ public class Dict : ScriptableObject
                 case Type.INTEGER:
                 case Type.FLOAT:
                     return 0;
+                case Type.COLOR:
+                    return Color.black;
             }
         }
         return value;
     }
 
-    public void SetKeyAt(int index, object key)
+    public void _SetKeyAt(int index, object key)
     {
-        GetKeyList()[index] = key;
+        _GetKeyList()[index] = key;
     }
 
-    public void SetValueAt(int index, object key)
+    public void _SetValueAt(int index, object key)
     {
         GetValueList()[index] = key;
     }
 
-    public void AddBlankEntry()
+    public void _AddBlankEntry()
     {
-        AddBlankElement(GetKeyList(), KeyType);
+        AddBlankElement(_GetKeyList(), KeyType);
         AddBlankElement(GetValueList(), ValueType);
     }
 
@@ -188,43 +196,38 @@ public class Dict : ScriptableObject
             list.Add(0f);
         else if (t == Type.STRING)
             list.Add(string.Empty);
+        else if (t == Type.COLOR)
+            list.Add(Color.black);
         else
             list.Add(null);
     }
 
-    public void RemoveAt(int i)
+    public void _RemoveAt(int i)
     {
-        s_keys.RemoveAt(i);
-        s_values.RemoveAt(i);
+        _GetKeyList().RemoveAt(i);
+        GetValueList().RemoveAt(i);
     }
 
     public void Clear()
     {
-        GetKeyList().Clear();
-        GetValueList().Clear();
-    }
+        IList[] lists = 
+        { 
+            s_keys, i_keys, f_keys, o_keys, c_keys,
+            s_values, i_values, f_values, o_values, c_values
+        };
 
-    public void ClearAll()
-    {
-        s_keys.Clear();
-        i_keys.Clear();
-        f_keys.Clear();
-        o_keys.Clear();
-
-        s_values.Clear();
-        i_values.Clear();
-        f_values.Clear();
-        o_values.Clear();
+        foreach (IList l in lists)
+            l.Clear();
     }
 
     public bool Contains(object key)
     {
-        return GetKeyList().Contains(key);
+        return _GetKeyList().Contains(key);
     }
 
     public IEnumerable<T> Keys<T>()
     {
-        return GetKeyList() as IEnumerable<T>;
+        return _GetKeyList() as IEnumerable<T>;
     }
 
     public IEnumerable<T> Values<T>()

@@ -4,10 +4,17 @@ using UnityEditor;
 [CustomPropertyDrawer(typeof(Dict))]
 public class DictDrawer : PropertyDrawer
 {
-    private const float ELEMENT_HEIGHT = 20f;
+    private const float ELEMENT_HEIGHT =    20f;
 
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
+        Rect allRect = new Rect(position);
+        Rect r = new Rect(position);
+        r.height = ELEMENT_HEIGHT;
+        GUI.Label(r, property.name);
+        position.y += ELEMENT_HEIGHT;
+
+        GUI.Box(allRect, string.Empty);
         DrawDictInspector(position, GetDict(property));
     }
 
@@ -30,7 +37,7 @@ public class DictDrawer : PropertyDrawer
             GUI.Label(tempRect, "Key:");
             tempRect.x += tempRect.width;
             tempRect.width = objectFieldWidth;
-            d.SetKeyAt(i, EditorField(tempRect, d.GetKeyAt(i), d.KeyType));
+            d._SetKeyAt(i, EditorField(tempRect, d._GetKeyAt(i), d.KeyType));
 
             tempRect.x += tempRect.width;
             tempRect.width = labelWidth;
@@ -39,13 +46,13 @@ public class DictDrawer : PropertyDrawer
             GUI.Label(tempRect, "Value:");
             tempRect.x += tempRect.width;
             tempRect.width = objectFieldWidth;
-            d.SetValueAt(i, EditorField(tempRect, d.GetValueAt(i), d.ValueType));
+            d._SetValueAt(i, EditorField(tempRect, d._GetValueAt(i), d.ValueType));
 
             tempRect.x += tempRect.width;
             tempRect.width = buttonWidth;
             if (GUI.Button(tempRect, "X"))
             {
-                d.RemoveAt(i);
+                d._RemoveAt(i);
                 i--;
             }
         }
@@ -53,9 +60,9 @@ public class DictDrawer : PropertyDrawer
         float tableBottomY = r.y + ELEMENT_HEIGHT * (d.KeyCount + 3);
 
         if (GUI.Button(new Rect(r.x, tableBottomY, r.width / 2f, ELEMENT_HEIGHT), "+"))
-            d.AddBlankEntry();
+            d._AddBlankEntry();
         if (GUI.Button(new Rect(r.x + r.width / 2, tableBottomY, r.width / 2f, ELEMENT_HEIGHT), "Clear all"))
-            d.ClearAll();
+            d.Clear();
 
         if (HasRepeatedKeys(d))
             EditorGUI.HelpBox(new Rect(r.x, tableBottomY + ELEMENT_HEIGHT, r.width, ELEMENT_HEIGHT), "There are repeated keys in the dictionary!", MessageType.Error);
@@ -68,7 +75,7 @@ public class DictDrawer : PropertyDrawer
 
     private static bool HasRepeatedKeys(Dict d)
     {
-        System.Collections.IList keys = d.GetKeyList();
+        System.Collections.IList keys = d._GetKeyList();
         for (int i = 0; i < keys.Count - 1; i++)
             for (int j = i + 1; j < keys.Count; j++)
                 if (keys[i] != null && keys[i].Equals(keys[j]))
@@ -86,6 +93,8 @@ public class DictDrawer : PropertyDrawer
                 return EditorGUI.IntField(r, (int)original);
             case Dict.Type.FLOAT:
                 return EditorGUI.FloatField(r, (float)original);
+            case Dict.Type.COLOR:
+                return EditorGUI.ColorField(r, (Color)original);
         }
         return EditorGUI.ObjectField(r, (Object)original, typeof(Object), true);
     }
@@ -93,7 +102,7 @@ public class DictDrawer : PropertyDrawer
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
         int keyCount = GetDict(property).KeyCount;
-        return (keyCount + 8 * ELEMENT_HEIGHT);
+        return (keyCount + 6) * ELEMENT_HEIGHT;
     }
 
     private static Dict GetDict(SerializedProperty property)
