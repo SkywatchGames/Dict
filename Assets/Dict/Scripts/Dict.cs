@@ -59,6 +59,26 @@ public class Dict : ScriptableObject
         }
     }
 
+    void OnEnable()
+    {
+        //acabou de criar o Dict
+        //se não estava serializado, inicializa as listas
+        if (s_keys == null)
+        {
+            s_keys = new List<string>();
+            s_values = new List<string>();
+
+            i_keys = new List<int>();
+            i_values = new List<int>();
+
+            f_keys = new List<float>();
+            f_values = new List<float>();
+
+            o_keys = new List<Object>();
+            o_values = new List<Object>();
+        }
+    }
+
     public T Get<T>(object key)
     {
         return (T)GetValue(key);
