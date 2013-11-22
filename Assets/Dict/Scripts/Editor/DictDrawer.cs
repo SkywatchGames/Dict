@@ -5,17 +5,27 @@ using UnityEditor;
 public class DictDrawer : PropertyDrawer
 {
     private const float ELEMENT_HEIGHT =    20f;
+    private bool foldoutOpen = true;
+    private const float H_MARGIN = 5f, V_MARGIN = 5f;
 
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
+        Dict d = GetDict(property);
+
         Rect allRect = new Rect(position);
+        GUI.Box(allRect, string.Empty);
+
         Rect r = new Rect(position);
         r.height = ELEMENT_HEIGHT;
-        GUI.Label(r, property.name);
-        position.y += ELEMENT_HEIGHT;
 
-        GUI.Box(allRect, string.Empty);
-        DrawDictInspector(position, GetDict(property));
+        foldoutOpen = EditorGUI.InspectorTitlebar(r, foldoutOpen, d);
+        
+        position.y += ELEMENT_HEIGHT + V_MARGIN;
+        position.width -= 2 * H_MARGIN;
+        position.x += H_MARGIN;
+
+        if(foldoutOpen)
+            DrawDictInspector(position, d);
     }
 
 
@@ -59,13 +69,14 @@ public class DictDrawer : PropertyDrawer
 
         float tableBottomY = r.y + ELEMENT_HEIGHT * (d.KeyCount + 3);
 
-        if (GUI.Button(new Rect(r.x, tableBottomY, r.width / 2f, ELEMENT_HEIGHT), "+"))
+        const float BUTTONS_SPACING = 50f;
+        if (GUI.Button(new Rect(r.x, tableBottomY, r.width / 2f - BUTTONS_SPACING, ELEMENT_HEIGHT), "+"))
             d._AddBlankEntry();
-        if (GUI.Button(new Rect(r.x + r.width / 2, tableBottomY, r.width / 2f, ELEMENT_HEIGHT), "Clear all"))
+        if (GUI.Button(new Rect(r.x + r.width / 2 + BUTTONS_SPACING, tableBottomY, r.width / 2f - BUTTONS_SPACING, ELEMENT_HEIGHT), "Clear all"))
             d.Clear();
 
         if (HasRepeatedKeys(d))
-            EditorGUI.HelpBox(new Rect(r.x, tableBottomY + ELEMENT_HEIGHT, r.width, ELEMENT_HEIGHT), "There are repeated keys in the dictionary!", MessageType.Error);
+            EditorGUI.HelpBox(new Rect(r.x, tableBottomY + 2 * ELEMENT_HEIGHT, r.width, ELEMENT_HEIGHT), "There are repeated keys in the dictionary!", MessageType.Error);
 
         if (GUI.changed)
             EditorUtility.SetDirty(d);
@@ -101,8 +112,16 @@ public class DictDrawer : PropertyDrawer
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
-        int keyCount = GetDict(property).KeyCount;
-        return (keyCount + 6) * ELEMENT_HEIGHT;
+        if (!foldoutOpen)
+            return ELEMENT_HEIGHT;
+
+        Dict d = GetDict(property);
+        int keyCount = d.KeyCount;
+
+        float resp = (keyCount + 5) * ELEMENT_HEIGHT + 2 * V_MARGIN;
+        if (HasRepeatedKeys(d))
+            resp += 2 * ELEMENT_HEIGHT;
+        return resp;
     }
 
     private static Dict GetDict(SerializedProperty property)
