@@ -33,9 +33,7 @@ public class Dict : ScriptableObject
             Type oldType = keyType;
             keyType = value;
             if (value != oldType)
-            {
                 Clear();
-            }
         }
     }
 
@@ -50,9 +48,45 @@ public class Dict : ScriptableObject
             Type oldType = valueType;
             valueType = value;
             if (value != oldType)
-            {
                 Clear();
+        }
+    }
+
+    private System.Type InnerKeyType
+    {
+        get
+        {
+            switch (KeyType)
+            {
+                case Type.STRING:
+                    return typeof(string);
+                case Type.INTEGER:
+                    return typeof(int);
+                case Type.FLOAT:
+                    return typeof(float);
+                case Type.COLOR:
+                    return typeof(Color);
             }
+            return typeof(Object);
+        }
+    }
+
+    private System.Type InnerValueType
+    {
+        get
+        {
+            switch (ValueType)
+            {
+                case Type.STRING:
+                    return typeof(string);
+                case Type.INTEGER:
+                    return typeof(int);
+                case Type.FLOAT:
+                    return typeof(float);
+                case Type.COLOR:
+                    return typeof(Color);
+            }
+            return typeof(Object);
         }
     }
 
@@ -82,6 +116,11 @@ public class Dict : ScriptableObject
 
     public T Get<T>(object key)
     {
+        if (!key.GetType().Equals(InnerKeyType))
+            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", KeyType, key.GetType()));
+        if (!typeof(T).Equals(InnerValueType))
+            throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, typeof(T)));
+
         return (T)GetValue(key);
     }
 
@@ -127,6 +166,8 @@ public class Dict : ScriptableObject
 
     public object GetValue(object key)
     {
+        if (!key.GetType().Equals(InnerKeyType))
+            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, key.GetType()));
         
         int index = 0;
         index = _GetKeyList().IndexOf(key);
@@ -222,16 +263,25 @@ public class Dict : ScriptableObject
 
     public bool Contains(object key)
     {
+        if (!key.GetType().Equals(InnerKeyType))
+            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, key.GetType()));
+
         return _GetKeyList().Contains(key);
     }
 
     public IEnumerable<T> Keys<T>()
     {
+        if (!typeof(T).Equals(InnerKeyType))
+            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, typeof(T)));
+
         return _GetKeyList() as IEnumerable<T>;
     }
 
     public IEnumerable<T> Values<T>()
     {
+        if (!typeof(T).Equals(InnerValueType))
+            throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, typeof(T)));
+
         return GetValueList() as IEnumerable<T>;
     }
 }

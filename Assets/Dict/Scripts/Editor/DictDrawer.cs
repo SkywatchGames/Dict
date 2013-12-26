@@ -4,13 +4,19 @@ using UnityEditor;
 [CustomPropertyDrawer(typeof(Dict))]
 public class DictDrawer : PropertyDrawer
 {
-    private const float ELEMENT_HEIGHT =    20f;
+    private const float ELEMENT_HEIGHT =    20f, KEY_VERTICAL_SPACING = 3f;
     private bool foldoutOpen = true;
     private const float H_MARGIN = 5f, V_MARGIN = 5f;
+
+
+    //meu teste
+    private bool allowCloning = false;
 
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
         Dict d = GetDict(property);
+
+        
 
         Rect allRect = new Rect(position);
         GUI.Box(allRect, string.Empty);
@@ -19,13 +25,21 @@ public class DictDrawer : PropertyDrawer
         r.height = ELEMENT_HEIGHT;
 
         foldoutOpen = EditorGUI.InspectorTitlebar(r, foldoutOpen, d);
+
+        
         
         position.y += ELEMENT_HEIGHT + V_MARGIN;
         position.width -= 2 * H_MARGIN;
         position.x += H_MARGIN;
 
-        if(foldoutOpen)
+        if (foldoutOpen)
+        {
             DrawDictInspector(position, d);
+            if (allowCloning && GUI.Button(new Rect(r.x, r.y + GetPropertyHeight(property, null) - ELEMENT_HEIGHT, r.width, ELEMENT_HEIGHT), "Clone"))
+            {
+                property.objectReferenceValue = Object.Instantiate(d);
+            }
+        }
     }
 
 
@@ -40,9 +54,11 @@ public class DictDrawer : PropertyDrawer
         float labelWidth = 40f;
         float buttonWidth = 20f;
         float objectFieldWidth = (r.width - 2 * labelWidth - buttonWidth) / 2f;
+
+        Rect entryRect = new Rect(r.x, r.y + ELEMENT_HEIGHT * 3, labelWidth, ELEMENT_HEIGHT);
         for (int i = 0; i < d.KeyCount; i++)
         {
-            Rect tempRect = new Rect(r.x, r.y + ELEMENT_HEIGHT * (i + 3), labelWidth, ELEMENT_HEIGHT);
+            Rect tempRect = new Rect(entryRect);
 
             GUI.Label(tempRect, "Key:");
             tempRect.x += tempRect.width;
@@ -52,7 +68,6 @@ public class DictDrawer : PropertyDrawer
             tempRect.x += tempRect.width;
             tempRect.width = labelWidth;
 
-            //tempRect = new Rect(r.x + buttonWidth + objectFieldWidth, r.y + ELEMENT_HEIGHT * (i + 3), width5, ELEMENT_HEIGHT);
             GUI.Label(tempRect, "Value:");
             tempRect.x += tempRect.width;
             tempRect.width = objectFieldWidth;
@@ -65,18 +80,21 @@ public class DictDrawer : PropertyDrawer
                 d._RemoveAt(i);
                 i--;
             }
+
+            entryRect.y += ELEMENT_HEIGHT + KEY_VERTICAL_SPACING;
         }
 
-        float tableBottomY = r.y + ELEMENT_HEIGHT * (d.KeyCount + 3);
+        float tableBottomY = entryRect.y;
 
-        const float BUTTONS_SPACING = 50f;
-        if (GUI.Button(new Rect(r.x, tableBottomY, r.width / 2f - BUTTONS_SPACING, ELEMENT_HEIGHT), "+"))
+        const float BUTTONS_SPACING = 35f;
+        buttonWidth = (r.width - BUTTONS_SPACING) / 2f;
+        if (GUI.Button(new Rect(r.x, tableBottomY, buttonWidth, ELEMENT_HEIGHT), "+"))
             d._AddBlankEntry();
-        if (GUI.Button(new Rect(r.x + r.width / 2 + BUTTONS_SPACING, tableBottomY, r.width / 2f - BUTTONS_SPACING, ELEMENT_HEIGHT), "Clear all"))
+        if (GUI.Button(new Rect(r.x + buttonWidth + BUTTONS_SPACING, tableBottomY, buttonWidth, ELEMENT_HEIGHT), "Clear all"))
             d.Clear();
 
         if (HasRepeatedKeys(d))
-            EditorGUI.HelpBox(new Rect(r.x, tableBottomY + 2 * ELEMENT_HEIGHT, r.width, ELEMENT_HEIGHT), "There are repeated keys in the dictionary!", MessageType.Error);
+            EditorGUI.HelpBox(new Rect(r.x, tableBottomY + ELEMENT_HEIGHT + KEY_VERTICAL_SPACING, r.width, ELEMENT_HEIGHT), "There are repeated keys in the dictionary!", MessageType.Error);
 
         if (GUI.changed)
             EditorUtility.SetDirty(d);
@@ -118,9 +136,14 @@ public class DictDrawer : PropertyDrawer
         Dict d = GetDict(property);
         int keyCount = d.KeyCount;
 
-        float resp = (keyCount + 5) * ELEMENT_HEIGHT + 2 * V_MARGIN;
+
+        int elementsCount = 5;
+        if (allowCloning)
+            elementsCount++;
+
+        float resp = keyCount * (ELEMENT_HEIGHT + KEY_VERTICAL_SPACING) + elementsCount * ELEMENT_HEIGHT + 2 * V_MARGIN;
         if (HasRepeatedKeys(d))
-            resp += 2 * ELEMENT_HEIGHT;
+            resp += ELEMENT_HEIGHT;
         return resp;
     }
 
