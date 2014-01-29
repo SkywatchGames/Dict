@@ -4,6 +4,10 @@ using System.Collections.Generic;
 
 #pragma warning disable 649
 
+/// <summary>
+/// Dictionary class that maps basic key types to other types in a one-to-many relationship.
+/// Although no error will be thrown, repeated keys will trigger incorrect behaviour.
+/// </summary>
 public class Dict : ScriptableObject
 {
     public enum Type { STRING, INTEGER, FLOAT, OBJECT, COLOR}
@@ -22,6 +26,9 @@ public class Dict : ScriptableObject
     [SerializeField]
     private List<Color> c_keys, c_values;
 
+    /// <summary>
+    /// Returns the type of the keys.
+    /// </summary>
     public Type KeyType
     {
         get
@@ -37,6 +44,9 @@ public class Dict : ScriptableObject
         }
     }
 
+    /// <summary>
+    /// Returns the type of the values.
+    /// </summary>
     public Type ValueType
     {
         get
@@ -52,6 +62,155 @@ public class Dict : ScriptableObject
         }
     }
 
+    public T Get<T>(object key)
+    {
+        if (!key.GetType().Equals(InnerKeyType))
+            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", KeyType, key.GetType()));
+        if (!typeof(T).Equals(InnerValueType))
+            throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, typeof(T)));
+
+        return (T)GetValue(key);
+    }
+
+    public int KeyCount
+    {
+        get
+        {
+            return _GetKeyList().Count;
+        }
+    }
+
+    public object GetValue(object key)
+    {
+        if (!key.GetType().Equals(InnerKeyType))
+            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, key.GetType()));
+        
+        int index = 0;
+        index = _GetKeyList().IndexOf(key);
+        object o = GetValueList()[index];
+        return o;
+    }
+
+    /// <summary>
+    /// Erases all entries.
+    /// </summary>
+    public void Clear()
+    {
+        IList[] lists = 
+        { 
+            s_keys, i_keys, f_keys, o_keys, c_keys,
+            s_values, i_values, f_values, o_values, c_values
+        };
+
+        foreach (IList l in lists)
+            l.Clear();
+    }
+
+    public bool Contains(object key)
+    {
+        if (!key.GetType().Equals(InnerKeyType))
+            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, key.GetType()));
+
+        return _GetKeyList().Contains(key);
+    }
+
+    public IEnumerable<T> Keys<T>()
+    {
+        if (!typeof(T).Equals(InnerKeyType))
+            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, typeof(T)));
+
+        return _GetKeyList() as IEnumerable<T>;
+    }
+
+    public IEnumerable<T> Values<T>()
+    {
+        if (!typeof(T).Equals(InnerValueType))
+            throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, typeof(T)));
+
+        return GetValueList() as IEnumerable<T>;
+    }
+
+    #region GUI_EDITOR_METHODS
+    public IList _GetKeyList()
+    {
+        switch (keyType)
+        {
+            case Type.STRING:
+                return s_keys;
+            case Type.INTEGER:
+                return i_keys;
+            case Type.FLOAT:
+                return f_keys;
+            case Type.COLOR:
+                return c_keys;
+        }
+        return o_keys;
+    }
+
+    public object _GetKeyAt(int index)
+    {
+        object value = _GetKeyList()[index];
+        if (value == null)
+        {
+            switch (keyType)
+            {
+                case Type.STRING:
+                    return string.Empty;
+                case Type.INTEGER:
+                case Type.FLOAT:
+                    return 0;
+                case Type.COLOR:
+                    return Color.black;
+            }
+        }
+        return value;
+    }
+
+    public object _GetValueAt(int index)
+    {
+        object value = GetValueList()[index];
+        if (value == null)
+        {
+            switch (valueType)
+            {
+                case Type.STRING:
+                    return string.Empty;
+                case Type.INTEGER:
+                case Type.FLOAT:
+                    return 0;
+                case Type.COLOR:
+                    return Color.black;
+            }
+        }
+        return value;
+    }
+
+    public void _SetKeyAt(int index, object key)
+    {
+        _GetKeyList()[index] = key;
+    }
+
+    public void _SetValueAt(int index, object key)
+    {
+        GetValueList()[index] = key;
+    }
+
+    public void _AddBlankEntry()
+    {
+        AddBlankElement(_GetKeyList(), KeyType);
+        AddBlankElement(GetValueList(), ValueType);
+    }
+
+
+
+    public void _RemoveAt(int i)
+    {
+        _GetKeyList().RemoveAt(i);
+        GetValueList().RemoveAt(i);
+    }
+    #endregion
+
+    #region PRIVATE_METHODS
     private System.Type InnerKeyType
     {
         get
@@ -114,40 +273,6 @@ public class Dict : ScriptableObject
         }
     }
 
-    public T Get<T>(object key)
-    {
-        if (!key.GetType().Equals(InnerKeyType))
-            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", KeyType, key.GetType()));
-        if (!typeof(T).Equals(InnerValueType))
-            throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, typeof(T)));
-
-        return (T)GetValue(key);
-    }
-
-    public int KeyCount
-    {
-        get
-        {
-            return _GetKeyList().Count;
-        }
-    }
-
-    public IList _GetKeyList()
-    {
-        switch (keyType)
-        {
-            case Type.STRING:
-                return s_keys;
-            case Type.INTEGER:
-                return i_keys;
-            case Type.FLOAT:
-                return f_keys;
-            case Type.COLOR:
-                return c_keys;
-        }
-        return o_keys;
-    }
-
     private IList GetValueList()
     {
         switch (valueType)
@@ -164,71 +289,6 @@ public class Dict : ScriptableObject
         return o_values;
     }
 
-    public object GetValue(object key)
-    {
-        if (!key.GetType().Equals(InnerKeyType))
-            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, key.GetType()));
-        
-        int index = 0;
-        index = _GetKeyList().IndexOf(key);
-        object o = GetValueList()[index];
-        return o;
-    }
-
-    public object _GetKeyAt(int index)
-    {
-        object value = _GetKeyList()[index];
-        if (value == null)
-        {
-            switch (keyType)
-            {
-                case Type.STRING:
-                    return string.Empty;
-                case Type.INTEGER:
-                case Type.FLOAT:
-                    return 0;
-                case Type.COLOR:
-                    return Color.black;
-            }
-        }
-        return value;
-    }
-
-    public object _GetValueAt(int index)
-    {
-        object value = GetValueList()[index];
-        if (value == null)
-        {
-            switch (valueType)
-            {
-                case Type.STRING:
-                    return string.Empty;
-                case Type.INTEGER:
-                case Type.FLOAT:
-                    return 0;
-                case Type.COLOR:
-                    return Color.black;
-            }
-        }
-        return value;
-    }
-
-    public void _SetKeyAt(int index, object key)
-    {
-        _GetKeyList()[index] = key;
-    }
-
-    public void _SetValueAt(int index, object key)
-    {
-        GetValueList()[index] = key;
-    }
-
-    public void _AddBlankEntry()
-    {
-        AddBlankElement(_GetKeyList(), KeyType);
-        AddBlankElement(GetValueList(), ValueType);
-    }
-
     private void AddBlankElement(IList list, Type t)
     {
         if (t == Type.INTEGER)
@@ -242,48 +302,7 @@ public class Dict : ScriptableObject
         else
             list.Add(null);
     }
-
-    public void _RemoveAt(int i)
-    {
-        _GetKeyList().RemoveAt(i);
-        GetValueList().RemoveAt(i);
-    }
-
-    public void Clear()
-    {
-        IList[] lists = 
-        { 
-            s_keys, i_keys, f_keys, o_keys, c_keys,
-            s_values, i_values, f_values, o_values, c_values
-        };
-
-        foreach (IList l in lists)
-            l.Clear();
-    }
-
-    public bool Contains(object key)
-    {
-        if (!key.GetType().Equals(InnerKeyType))
-            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, key.GetType()));
-
-        return _GetKeyList().Contains(key);
-    }
-
-    public IEnumerable<T> Keys<T>()
-    {
-        if (!typeof(T).Equals(InnerKeyType))
-            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, typeof(T)));
-
-        return _GetKeyList() as IEnumerable<T>;
-    }
-
-    public IEnumerable<T> Values<T>()
-    {
-        if (!typeof(T).Equals(InnerValueType))
-            throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, typeof(T)));
-
-        return GetValueList() as IEnumerable<T>;
-    }
+    #endregion
 }
 
 #pragma warning restore 649
