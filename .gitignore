@@ -5,3 +5,5 @@
 /Library
 /obj
 /*.suo
+/build_demo
+/*.userprefs
