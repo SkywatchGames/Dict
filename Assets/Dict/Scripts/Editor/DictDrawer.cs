@@ -90,7 +90,7 @@ public class DictDrawer : PropertyDrawer
         buttonWidth = (r.width - BUTTONS_SPACING) / 2f;
         if (GUI.Button(new Rect(r.x, tableBottomY, buttonWidth, ELEMENT_HEIGHT), "+"))
             d._AddBlankEntry();
-        if (GUI.Button(new Rect(r.x + buttonWidth + BUTTONS_SPACING, tableBottomY, buttonWidth, ELEMENT_HEIGHT), "Clear all"))
+        if (GUI.Button(new Rect(r.x + buttonWidth + BUTTONS_SPACING, tableBottomY, buttonWidth, ELEMENT_HEIGHT), "Clear"))
             d.Clear();
 
         if (HasRepeatedKeys(d))
