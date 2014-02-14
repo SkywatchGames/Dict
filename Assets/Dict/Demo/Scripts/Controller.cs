@@ -24,8 +24,7 @@ namespace DictDemo
 				
 				
 				GameObject obj = Instantiate(quadPrefab) as GameObject;
-				Material mat = obj.renderer.material;
-				mat.color = c;
+                (obj.renderer as SpriteRenderer).color = c;
 				
 				obj.GetComponentInChildren<TextMesh>().text = colorName;
 				obj.transform.Translate(Vector3.down * i / 3.0f);

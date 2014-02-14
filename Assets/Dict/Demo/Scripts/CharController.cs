@@ -12,7 +12,6 @@ public class CharController : MonoBehaviour
 
     void OnMouseEnter()
     {
-        print("mouse enter");
         animator.SetTrigger("open mouth");
     }
 
