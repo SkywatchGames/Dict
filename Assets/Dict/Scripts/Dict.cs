@@ -105,6 +105,33 @@ public class Dict : ScriptableObject
     }
 
     /// <summary>
+    /// Adds or updates the entry for the specified key.
+    /// </summary>
+    /// <param name="key">Key to be added or updated.</param>
+    /// <param name="value">The value to be associated to the key.</param>
+    public void Set(object key, object value)
+    {
+        ValidateKeyType(key);
+        ValidateValueType(value.GetType());
+
+        if (IsFloat(InnerKeyType)) //evitar problema de System.Single e System.Float
+            key = System.Convert.ToSingle(key);
+        if (IsFloat(InnerValueType))
+            value = System.Convert.ToSingle(value);
+
+        if (!Contains(key))
+        {
+            _GetKeyList().Add(key);
+            GetValueList().Add(value);
+        }
+        else
+        {
+            int index = _GetKeyList().IndexOf(key);
+            GetValueList()[index] = value;
+        }
+    }
+
+    /// <summary>
     /// Returns the number of entries present in the dictionary.
     /// </summary>
     public int KeyCount
@@ -208,14 +235,34 @@ public class Dict : ScriptableObject
 
     private void ValidateKeyType(System.Type givenType)
     {
-        if (!givenType.Equals(InnerKeyType))
+        bool typesAlike = IsInteger(givenType) && IsInteger(InnerKeyType.GetType());
+
+        if (!givenType.Equals(InnerKeyType) && !givenType.IsSubclassOf(InnerKeyType) && !typesAlike)
             throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, givenType));
     }
 
     private void ValidateValueType(System.Type givenType)
     {
-        if (!givenType.Equals(InnerValueType))
+        bool typesAlike = IsInteger(givenType) && IsInteger(InnerValueType.GetType());
+        typesAlike = typesAlike || (IsInteger(givenType) && IsNumber(InnerValueType));
+
+        if (!givenType.Equals(InnerValueType) && !givenType.IsSubclassOf(InnerValueType) && !typesAlike)
             throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, givenType));
+    }
+
+    private static bool IsInteger(System.Type t)
+    {
+        return t.Equals(typeof(int)) || t.Equals(typeof(byte)) || t.Equals(typeof(short));
+    }
+
+    private static bool IsFloat(System.Type t)
+    {
+        return t.Equals(typeof(float)) || t.Equals(typeof(System.Single)) || t.Equals(typeof(double));
+    }
+
+    private static bool IsNumber(System.Type t)
+    {
+        return IsFloat(t) || IsInteger(t);
     }
 
     #region GUI_EDITOR_METHODS

@@ -8,3 +8,5 @@
 /build_demo
 /*.userprefs
 /docs
+/*.unityproj
+/*.booproj
