@@ -98,8 +98,8 @@ public class Dict : ScriptableObject
     /// <returns></returns>
     public V Get<V>(object key)
     {
-        ValidateKeyType(key);
-        ValidateValueType(typeof(V));
+        ValidateKey(key);
+        ValidateValueType(typeof(V), TypePolicy.ALLOW_SUBTYPES);
 
         return (V)GetValue(key);
     }
@@ -111,8 +111,8 @@ public class Dict : ScriptableObject
     /// <param name="value">The value to be associated to the key.</param>
     public void Set(object key, object value)
     {
-        ValidateKeyType(key);
-        ValidateValueType(value.GetType());
+        ValidateKey(key, TypePolicy.ALLOW_SUBTYPES);
+        ValidateValueType(value.GetType(), TypePolicy.ALLOW_SUBTYPES);
 
         if (IsFloat(InnerKeyType)) //evitar problema de System.Single e System.Float
             key = System.Convert.ToSingle(key);
@@ -150,7 +150,7 @@ public class Dict : ScriptableObject
     /// <returns>The value associated to the given key. Throws an exception if there isn't such key in the dictionary.</returns>
     public object GetValue(object key)
     {
-        ValidateKeyType(key);
+        ValidateKey(key);
         
         int index = 0;
         index = _GetKeyList().IndexOf(key);
@@ -183,7 +183,7 @@ public class Dict : ScriptableObject
     /// <returns>True if there is an entry with the specified key.</returns>
     public bool Contains(object key)
     {
-        ValidateKeyType(key);
+        //ValidateKeyType(key);
         return _GetKeyList().Contains(key);
     }
 
@@ -228,26 +228,33 @@ public class Dict : ScriptableObject
         return pairList;
     }
 
-    private void ValidateKeyType(object key)
+    #region TYPE_CHECK_LOGIC
+
+    private void ValidateKey(object key, TypePolicy policy = TypePolicy.STRICT)
     {
-        ValidateKeyType(key.GetType());
+        ValidateKeyType(key.GetType(), policy);
     }
 
-    private void ValidateKeyType(System.Type givenType)
+    private void ValidateKeyType(System.Type givenType, TypePolicy policy = TypePolicy.STRICT)
     {
-        bool typesAlike = IsInteger(givenType) && IsInteger(InnerKeyType.GetType());
-
-        if (!givenType.Equals(InnerKeyType) && !givenType.IsSubclassOf(InnerKeyType) && !typesAlike)
+        if (!ValidateTypes(givenType, InnerKeyType, policy))
             throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, givenType));
     }
 
-    private void ValidateValueType(System.Type givenType)
+    private void ValidateValueType(System.Type givenType, TypePolicy policy = TypePolicy.STRICT)
     {
-        bool typesAlike = IsInteger(givenType) && IsInteger(InnerValueType.GetType());
-        typesAlike = typesAlike || (IsInteger(givenType) && IsNumber(InnerValueType));
-
-        if (!givenType.Equals(InnerValueType) && !givenType.IsSubclassOf(InnerValueType) && !typesAlike)
+        if (!ValidateTypes(givenType, InnerValueType, policy))
             throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, givenType));
+    }
+
+    private static bool ValidateTypes(System.Type given, System.Type expected, TypePolicy policy)
+    {
+        bool typesAlike = IsInteger(given) && IsInteger(expected); //verifica se são inteiros
+        bool areEquals = given.Equals(expected);                   //verifica se são exatamente iguais
+        bool fitSubclass = policy == TypePolicy.ALLOW_SUBTYPES && (given.IsSubclassOf(expected) || IsInteger(given) && IsNumber(expected)); //verifica se são subclasse, se permitido
+        
+
+        return typesAlike || areEquals || fitSubclass;
     }
 
     private static bool IsInteger(System.Type t)
@@ -264,6 +271,10 @@ public class Dict : ScriptableObject
     {
         return IsFloat(t) || IsInteger(t);
     }
+
+    private enum TypePolicy { STRICT, ALLOW_SUBTYPES}
+
+    #endregion
 
     #region GUI_EDITOR_METHODS
     public IList _GetKeyList()

@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 using NUnit.Framework;
 
 
@@ -82,10 +82,14 @@ public class DictUnitTests {
 
         d.KeyType = Dict.Type.OBJECT;
         d.Set(Camera.main, 0);
-        Assert.DoesNotThrow(delegate()
+        Assert.Catch(delegate()
         {
             d.Keys<Camera>();
         });
-        Assert.NotNull(d.Keys<Camera>().GetEnumerator().Current);
+        Assert.AreNotEqual(0, d.KeyCount);
+
+        IEnumerator<Object> enumerator = d.Keys<Object>().GetEnumerator();
+        enumerator.MoveNext();
+        Assert.NotNull(enumerator.Current as Camera);
     }
 }
