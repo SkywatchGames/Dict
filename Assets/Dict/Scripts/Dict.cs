@@ -10,6 +10,9 @@ using System.Collections.Generic;
 /// </summary>
 public class Dict : ScriptableObject
 {
+    /// <summary>
+    /// This enum represents the object types that can be used as key or values.
+    /// </summary>
     public enum Type { STRING, INTEGER, FLOAT, OBJECT, COLOR}
 
     [SerializeField]
@@ -27,8 +30,9 @@ public class Dict : ScriptableObject
     private List<Color> c_keys, c_values;
 
     /// <summary>
-    /// Returns the type of the keys.
+    /// Returns or sets the type of the keys. In case the type changes, all entires from the dictionary are removed.
     /// </summary>
+    ///
     public Type KeyType
     {
         get
@@ -45,7 +49,7 @@ public class Dict : ScriptableObject
     }
 
     /// <summary>
-    /// Returns the type of the values.
+    /// Returns or sets the type of the values. In case the type changes, all entires from the dictionary are removed.
     /// </summary>
     public Type ValueType
     {
@@ -62,14 +66,20 @@ public class Dict : ScriptableObject
         }
     }
 
-    public T Get<T>(object key)
+    /// <summary>
+    /// Retrieve the value associated to the given key.
+    /// </summary>
+    /// <typeparam name="V">Desired return type. Should be the same as this Dict's value type; otherwise, an exception will be thrown.</typeparam>
+    /// <param name="key">Key object to be searched. The associated value will be returned. In case no value is retured, an exception will be thrown.</param>
+    /// <returns></returns>
+    public V Get<V>(object key)
     {
         if (!key.GetType().Equals(InnerKeyType))
             throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", KeyType, key.GetType()));
-        if (!typeof(T).Equals(InnerValueType))
-            throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, typeof(T)));
+        if (!typeof(V).Equals(InnerValueType))
+            throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, typeof(V)));
 
-        return (T)GetValue(key);
+        return (V)GetValue(key);
     }
 
     public int KeyCount
@@ -87,6 +97,9 @@ public class Dict : ScriptableObject
         
         int index = 0;
         index = _GetKeyList().IndexOf(key);
+        if (index == -1)
+            throw new System.Exception(string.Format("Key {0} was not found in the dictionary.", key));
+
         object o = GetValueList()[index];
         return o;
     }
@@ -106,6 +119,11 @@ public class Dict : ScriptableObject
             l.Clear();
     }
 
+    /// <summary>
+    /// Checks of this dictionary has an entry for the given key.
+    /// </summary>
+    /// <param name="key">Key to be checked.</param>
+    /// <returns>True if there is an entry with the specified key.</returns>
     public bool Contains(object key)
     {
         if (!key.GetType().Equals(InnerKeyType))
@@ -114,20 +132,51 @@ public class Dict : ScriptableObject
         return _GetKeyList().Contains(key);
     }
 
-    public IEnumerable<T> Keys<T>()
+    /// <summary>
+    /// Returns an enumerator with all the keys.
+    /// </summary>
+    /// <typeparam name="T">Expected key type. Must be the same as the dict key type.</typeparam>
+    /// <returns></returns>
+    public IEnumerable<K> Keys<K>()
     {
-        if (!typeof(T).Equals(InnerKeyType))
-            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, typeof(T)));
+        if (!typeof(K).Equals(InnerKeyType))
+            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, typeof(K)));
 
-        return _GetKeyList() as IEnumerable<T>;
+        return _GetKeyList() as IEnumerable<K>;
     }
 
-    public IEnumerable<T> Values<T>()
+    /// <summary>
+    /// Returns an enumerator with all the values.
+    /// </summary>
+    /// <typeparam name="V">Expected value type. Must be the same as the dict value type.</typeparam>
+    /// <returns></returns>
+    public IEnumerable<V> Values<V>()
     {
-        if (!typeof(T).Equals(InnerValueType))
-            throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, typeof(T)));
+        if (!typeof(V).Equals(InnerValueType))
+            throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, typeof(V)));
 
-        return GetValueList() as IEnumerable<T>;
+        return GetValueList() as IEnumerable<V>;
+    }
+
+    /// <summary>
+    /// Retrieves a KeyValuePair enumerator.
+    /// </summary>
+    /// <typeparam name="K">Key type.</typeparam>
+    /// <typeparam name="V">Value type.</typeparam>
+    /// <returns></returns>
+    public IEnumerable<KeyValuePair<K, V>> GetEnumerator<K, V>()
+    {
+        if (!typeof(K).Equals(InnerKeyType))
+            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, typeof(K)));
+        if (!typeof(V).Equals(InnerValueType))
+            throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, typeof(V)));
+
+        List<KeyValuePair<K, V>> pairList = new List<KeyValuePair<K, V>>();
+        foreach (K key in this.Keys<K>())
+        {
+            pairList.Add(new KeyValuePair<K, V>(key, this.Get<V>(key)));
+        }
+        return pairList;
     }
 
     #region GUI_EDITOR_METHODS
