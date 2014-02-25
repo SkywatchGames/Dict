@@ -13,7 +13,31 @@ public class Dict : ScriptableObject
     /// <summary>
     /// This enum represents the object types that can be used as key or values.
     /// </summary>
-    public enum Type { STRING, INTEGER, FLOAT, OBJECT, COLOR}
+    public enum Type { 
+        /// <summary>
+        /// The built-in string type.
+        /// </summary>
+        STRING,
+
+        /// <summary>
+        /// The built-in integer type.
+        /// </summary>
+        INTEGER,
+
+        /// <summary>
+        /// The built-in float type.
+        /// </summary>
+        FLOAT,
+
+        /// <summary>
+        /// The UnityEngine.Object type. Use this for GameObjects, Components, ScriptableObjects etc.
+        /// </summary>
+        OBJECT,
+        /// <summary>
+        /// The UnityEngine.Color type.
+        /// </summary>
+        COLOR
+    }
 
     [SerializeField]
     private Type keyType = Type.STRING, valueType = Type.STRING;
@@ -67,21 +91,22 @@ public class Dict : ScriptableObject
     }
 
     /// <summary>
-    /// Retrieve the value associated to the given key.
+    /// Retrieves the value associated to the given key.
     /// </summary>
     /// <typeparam name="V">Desired return type. Should be the same as this Dict's value type; otherwise, an exception will be thrown.</typeparam>
     /// <param name="key">Key object to be searched. The associated value will be returned. In case no value is retured, an exception will be thrown.</param>
     /// <returns></returns>
     public V Get<V>(object key)
     {
-        if (!key.GetType().Equals(InnerKeyType))
-            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", KeyType, key.GetType()));
-        if (!typeof(V).Equals(InnerValueType))
-            throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, typeof(V)));
+        ValidateKeyType(key);
+        ValidateValueType(typeof(V));
 
         return (V)GetValue(key);
     }
 
+    /// <summary>
+    /// Returns the number of entries present in the dictionary.
+    /// </summary>
     public int KeyCount
     {
         get
@@ -90,10 +115,15 @@ public class Dict : ScriptableObject
         }
     }
 
+
+    /// <summary>
+    /// Returns an untyped value associated to a key.
+    /// </summary>
+    /// <param name="key">Key to be searched.</param>
+    /// <returns>The value associated to the given key. Throws an exception if there isn't such key in the dictionary.</returns>
     public object GetValue(object key)
     {
-        if (!key.GetType().Equals(InnerKeyType))
-            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, key.GetType()));
+        ValidateKeyType(key);
         
         int index = 0;
         index = _GetKeyList().IndexOf(key);
@@ -120,15 +150,13 @@ public class Dict : ScriptableObject
     }
 
     /// <summary>
-    /// Checks of this dictionary has an entry for the given key.
+    /// Checks if this dictionary has an entry for the given key.
     /// </summary>
     /// <param name="key">Key to be checked.</param>
     /// <returns>True if there is an entry with the specified key.</returns>
     public bool Contains(object key)
     {
-        if (!key.GetType().Equals(InnerKeyType))
-            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, key.GetType()));
-
+        ValidateKeyType(key);
         return _GetKeyList().Contains(key);
     }
 
@@ -139,9 +167,7 @@ public class Dict : ScriptableObject
     /// <returns></returns>
     public IEnumerable<K> Keys<K>()
     {
-        if (!typeof(K).Equals(InnerKeyType))
-            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, typeof(K)));
-
+        ValidateKeyType(typeof(K));
         return _GetKeyList() as IEnumerable<K>;
     }
 
@@ -152,24 +178,20 @@ public class Dict : ScriptableObject
     /// <returns></returns>
     public IEnumerable<V> Values<V>()
     {
-        if (!typeof(V).Equals(InnerValueType))
-            throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, typeof(V)));
-
+        ValidateValueType(typeof(V));
         return GetValueList() as IEnumerable<V>;
     }
 
     /// <summary>
-    /// Retrieves a KeyValuePair enumerator.
+    /// Retrieves a KeyValuePair enumerator. When used in a 'foreach loop', must be called explicitly.
     /// </summary>
     /// <typeparam name="K">Key type.</typeparam>
     /// <typeparam name="V">Value type.</typeparam>
-    /// <returns></returns>
+    /// <returns>A KeyValueEnumerator.</returns>
     public IEnumerable<KeyValuePair<K, V>> GetEnumerator<K, V>()
     {
-        if (!typeof(K).Equals(InnerKeyType))
-            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, typeof(K)));
-        if (!typeof(V).Equals(InnerValueType))
-            throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, typeof(V)));
+        ValidateKeyType(typeof(K));
+        ValidateValueType(typeof(V));
 
         List<KeyValuePair<K, V>> pairList = new List<KeyValuePair<K, V>>();
         foreach (K key in this.Keys<K>())
@@ -177,6 +199,23 @@ public class Dict : ScriptableObject
             pairList.Add(new KeyValuePair<K, V>(key, this.Get<V>(key)));
         }
         return pairList;
+    }
+
+    private void ValidateKeyType(object key)
+    {
+        ValidateKeyType(key.GetType());
+    }
+
+    private void ValidateKeyType(System.Type givenType)
+    {
+        if (!givenType.Equals(InnerKeyType))
+            throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, givenType));
+    }
+
+    private void ValidateValueType(System.Type givenType)
+    {
+        if (!givenType.Equals(InnerValueType))
+            throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, givenType));
     }
 
     #region GUI_EDITOR_METHODS
