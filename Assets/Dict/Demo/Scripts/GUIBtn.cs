@@ -12,7 +12,7 @@ namespace DictDemo
         private int currSprite = 0;
 
 
-        void OnMouseDown()
+        void OnTouched()
         {
             ctrl.SendMessage(controllerMsg);
             currSprite = Mathf.Abs(1 - currSprite);
