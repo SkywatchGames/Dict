@@ -25,7 +25,7 @@ public class Dict : ScriptableObject
         INTEGER,
 
         /// <summary>
-        /// The built-in float type.
+        /// The built-in single precision float type.
         /// </summary>
         FLOAT,
 
@@ -99,7 +99,7 @@ public class Dict : ScriptableObject
     public V Get<V>(object key)
     {
         ValidateKey(key);
-        ValidateValueType(typeof(V), TypePolicy.ALLOW_SUBTYPES);
+        ValidateValueType(typeof(V));
 
         return (V)GetValue(key);
     }
@@ -111,8 +111,8 @@ public class Dict : ScriptableObject
     /// <param name="value">The value to be associated to the key.</param>
     public void Set(object key, object value)
     {
-        ValidateKey(key, TypePolicy.ALLOW_SUBTYPES);
-        ValidateValueType(value.GetType(), TypePolicy.ALLOW_SUBTYPES);
+        ValidateKey(key);
+        ValidateValue(value);
 
         if (IsFloat(InnerKeyType)) //evitar problema de System.Single e System.Float
             key = System.Convert.ToSingle(key);
@@ -194,7 +194,7 @@ public class Dict : ScriptableObject
     /// <returns></returns>
     public IEnumerable<K> Keys<K>()
     {
-        ValidateKeyType(typeof(K));
+        ValidateKeyType(typeof(K), TypePolicy.STRICT);
         return _GetKeyList() as IEnumerable<K>;
     }
 
@@ -205,7 +205,7 @@ public class Dict : ScriptableObject
     /// <returns></returns>
     public IEnumerable<V> Values<V>()
     {
-        ValidateValueType(typeof(V));
+        ValidateValueType(typeof(V), TypePolicy.STRICT);
         return GetValueList() as IEnumerable<V>;
     }
 
@@ -217,8 +217,8 @@ public class Dict : ScriptableObject
     /// <returns>A KeyValueEnumerator.</returns>
     public IEnumerable<KeyValuePair<K, V>> GetEnumerator<K, V>()
     {
-        ValidateKeyType(typeof(K));
-        ValidateValueType(typeof(V));
+        ValidateKeyType(typeof(K), TypePolicy.STRICT);
+        ValidateValueType(typeof(V), TypePolicy.STRICT);
 
         List<KeyValuePair<K, V>> pairList = new List<KeyValuePair<K, V>>();
         foreach (K key in this.Keys<K>())
@@ -228,20 +228,49 @@ public class Dict : ScriptableObject
         return pairList;
     }
 
-    #region TYPE_CHECK_LOGIC
-
-    private void ValidateKey(object key, TypePolicy policy = TypePolicy.STRICT)
+    /// <summary>
+    /// Removes the entry associated to the given key.
+    /// </summary>
+    /// <param name="key">Key to be removed.</param>
+    /// <returns>True if the element was present. False otherwise.</returns>
+    public bool Remove(object key)
     {
-        ValidateKeyType(key.GetType(), policy);
+        ValidateKey(key);
+        int index = _GetKeyList().IndexOf(key);
+        if (index == -1) 
+            return false;
+        else
+        {
+            _RemoveAt(index);
+            return true;
+        }
     }
 
-    private void ValidateKeyType(System.Type givenType, TypePolicy policy = TypePolicy.STRICT)
+    #region TYPE_CHECK_LOGIC
+
+    private void ValidateKey(object key, TypePolicy policy = TypePolicy.ALLOW_SUBTYPES)
+    {
+        bool nulltypeOk = key == null && (KeyType == Type.OBJECT || KeyType == Type.STRING);
+
+        if(!nulltypeOk) //null keys are ok for objects and strings
+            ValidateKeyType(key.GetType(), policy);
+    }
+
+    private void ValidateValue(object value, TypePolicy policy = TypePolicy.ALLOW_SUBTYPES)
+    {
+        bool nulltypeOk = value == null && (ValueType == Type.OBJECT || ValueType == Type.STRING);
+
+        if(!nulltypeOk) //null keys are ok for objects and strings
+            ValidateValueType(value.GetType(), policy);
+    }
+
+    private void ValidateKeyType(System.Type givenType, TypePolicy policy = TypePolicy.ALLOW_SUBTYPES)
     {
         if (!ValidateTypes(givenType, InnerKeyType, policy))
             throw new System.Exception(string.Format("Incorrect key type: expected {0} but got {1}", InnerKeyType, givenType));
     }
 
-    private void ValidateValueType(System.Type givenType, TypePolicy policy = TypePolicy.STRICT)
+    private void ValidateValueType(System.Type givenType, TypePolicy policy = TypePolicy.ALLOW_SUBTYPES)
     {
         if (!ValidateTypes(givenType, InnerValueType, policy))
             throw new System.Exception(string.Format("Incorrect value type: expected {0} but got {1}", InnerValueType, givenType));
