@@ -35,17 +35,19 @@
 	<script type="text/javascript">SyntaxHighlighter.all();</script>
 	<script>
 		function selectTab(tabNumber){
+			const DURATION = 1000;
+
 			for(var i = 1; i < 5; i++){
 				var tab = $('#tabs-'+i);
 				var selected = (i == tabNumber);
 				if(selected)
-					tab.show();
+					tab.show(DURATION);
 				else
-					tab.hide();
+					tab.hide(DURATION);
 			}
 		    var titles = ['Overview', 'Demo', 'Guide', 'Documentation'];
 		    document.title = 'Dict | ' + titles[tabNumber - 1];
-      		window.scrollTo(0, 0);
+      		//window.scrollTo(0, 0);
 			return false;
 			// $('#tabs-').css("visibility", "hidden");
 		}
