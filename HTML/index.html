@@ -22,10 +22,20 @@
 	<link href="tabs.css" rel="stylesheet" type="text/css"/>
 	<link href="doxygen.css" rel="stylesheet" type="text/css" />
 
+	<script type='text/javascript' src='https://ssl-webplayer.unity3d.com/download_webplayer-3.x/3.0/uo/jquery.min.js'></script>
+		<script type="text/javascript">
+		<!--
+		var unityObjectUrl = "http://webplayer.unity3d.com/download_webplayer-3.x/3.0/uo/UnityObject2.js";
+		if (document.location.protocol == 'https:')
+			unityObjectUrl = unityObjectUrl.replace("http://", "https://ssl-");
+		document.write('<script type="text\/javascript" src="' + unityObjectUrl + '"><\/script>');
+		-->
+		</script>
+
 	<script type="text/javascript">SyntaxHighlighter.all();</script>
 	<script>
 		function selectTab(tabNumber){
-			for(var i = 1; i < 4; i++){
+			for(var i = 1; i < 5; i++){
 				var tab = $('#tabs-'+i);
 				var selected = (i == tabNumber);
 				if(selected)
@@ -33,7 +43,7 @@
 				else
 					tab.hide();
 			}
-		    var titles = ['Overview', 'Guide', 'Documentation'];
+		    var titles = ['Overview', 'Demo', 'Guide', 'Documentation'];
 		    document.title = 'Dict | ' + titles[tabNumber - 1];
       		window.scrollTo(0, 0);
 			return false;
@@ -49,10 +59,10 @@
     <div class="large-12 columns">
       <div class="nav-bar right">
        <ul class="button-group">
-         <li><a class="button" onClick="selectTab(1)">Overview</a></li>
-         <li><a class="button" onClick="selectTab(2);">Guide</a></li>
-         <li><a class="button" onClick="selectTab(3);">Documentation</a></li>
-         <li><a href="mailto:support@skywatch.com.br" class="button">Support</a></li>
+         <li><a class="button" onClick="selectTab(1);">Overview</a></li>
+         <li><a class="button" onclick="selectTab(2);">Demo</a></li>
+         <li><a class="button" onClick="selectTab(3);">Guide</a></li>
+         <li><a class="button" onClick="selectTab(4);">Documentation</a></li>
         </ul>
       </div>
       <h1>Dict </br><small>Unity3D Serializable Dictionary.</small></h1>
@@ -78,13 +88,84 @@
 	            <p><strong>Dict</strong> is a Unity3D plugin that lets you create dictionaries to stablish associations between keys and values within the Scene Editor.</p>
 	            <p>Your dictionary can be easily created with just a couple lines of code.</p>
 	            <p>The API is very simillar to .NET's builtin generic dictionary.</p>
+	            <p>Check out <a onClick="selectTab(2)">our demo</a>!.</p>
 	          </div>
-	          <div class="large-6 columns">
+	          <center><div class="large-12 columns">
 	            <img src="img/code1.png" />
-	          </div>
+	          </div></center>
 	        </div>
         </div>
         <div id="tabs-2" style="display: none;">
+	        <h3>Demo</h3>
+	        <div class="row">
+	        <script type="text/javascript">
+		<!--
+			var config = {
+				width: 512, 
+				height: 359,
+				// width: 1216, 
+				// height: 768,
+				params: { enableDebugging:"0" }
+				
+			};
+			config.params["disableContextMenu"] = true;
+			var u = new UnityObject2(config);
+			
+			jQuery(function() {
+
+				var $missingScreen = jQuery("#unityPlayer").find(".missing");
+				var $brokenScreen = jQuery("#unityPlayer").find(".broken");
+				$missingScreen.hide();
+				$brokenScreen.hide();
+
+				u.observeProgress(function (progress) {
+					switch(progress.pluginStatus) {
+						case "broken":
+							$brokenScreen.find("a").click(function (e) {
+								e.stopPropagation();
+								e.preventDefault();
+								u.installPlugin();
+								return false;
+							});
+							$brokenScreen.show();
+						break;
+						case "missing":
+							$missingScreen.find("a").click(function (e) {
+								e.stopPropagation();
+								e.preventDefault();
+								u.installPlugin();
+								return false;
+							});
+							$missingScreen.show();
+						break;
+						case "installed":
+							$missingScreen.remove();
+						break;
+						case "first":
+						break;
+					}
+				});
+				u.initPlugin(jQuery("#unityPlayer")[0], "demo/demo.unity3d");
+			});
+		-->
+		</script>
+
+	          <div class="large-12 columns">
+          		<center><div class="content">
+					<div id="unityPlayer">
+						<div class="missing">
+							<a href="http://unity3d.com/webplayer/" title="Unity Web Player. Install now!">
+								<img alt="Unity Web Player. Install now!" src="http://webplayer.unity3d.com/installation/getunity.png" width="193" height="63" />
+							</a>
+						</div>
+					</div>
+				</div></center>
+	          </div>
+
+	        </div>
+
+        </div>
+        <div id="tabs-3" style="display: none;">
 	        <h3>Guide</h3>
 	        <div class="row">
 
@@ -137,7 +218,7 @@
 
         </div>
 
-        <div id="tabs-3" style="display: none;">
+        <div id="tabs-4" style="display: none;">
 	        <h3>Documentation</h3>
 	        <div class="row">
 	          <div class="large-12 columns">
@@ -550,6 +631,7 @@ Properties</h2></td></tr>
       <ul class="side-nav">
         <li><a href="http://www.skywatch.com.br/about/">About</a></li>
         <li><a href="http://assetstore.unity3d.com/">Buy it!</a></li>
+        <li><a href="mailto:support@skywatch.com.br">Support</a></li>
       </ul>
 
       <!-- <div class="panel">
