@@ -22,17 +22,30 @@
 	<link href="tabs.css" rel="stylesheet" type="text/css"/>
 	<link href="doxygen.css" rel="stylesheet" type="text/css" />
 
+	<!-- UnityObject -->
 	<script type='text/javascript' src='https://ssl-webplayer.unity3d.com/download_webplayer-3.x/3.0/uo/jquery.min.js'></script>
-		<script type="text/javascript">
-		<!--
+	<script type="text/javascript">
 		var unityObjectUrl = "http://webplayer.unity3d.com/download_webplayer-3.x/3.0/uo/UnityObject2.js";
 		if (document.location.protocol == 'https:')
 			unityObjectUrl = unityObjectUrl.replace("http://", "https://ssl-");
 		document.write('<script type="text\/javascript" src="' + unityObjectUrl + '"><\/script>');
-		-->
-		</script>
+	</script>
 
+	<!-- Google Analytics -->
+	<script>
+	  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+	  ga('create', 'UA-38022321-2', 'skywatch.com.br');
+	  ga('send', 'pageview');
+	</script>
+
+	<!-- Syntax Highlight -->
 	<script type="text/javascript">SyntaxHighlighter.all();</script>
+
+	<!-- Tab management -->
 	<script>
 		function selectTab(tabNumber){
 			const DURATION = 1000;
