@@ -1,6 +1,9 @@
 Dict v1.0
 Serializable Dicitonary
 
+Copyright (C) 2014 Skywatch Entretenimento Digital LTDA - ME
+This is free software. Please refer to LICENSE for more information.
+
 ===================================================================
 
 Installation and use instructions available at: http://www.skywatch.com.br/dict

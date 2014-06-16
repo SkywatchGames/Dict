@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿/*  Copyright (C) 2014 Skywatch Entretenimento Digital LTDA - ME
+    This is free software. Please refer to LICENSE for more information. */
+
+using UnityEngine;
 
 public class CameraTween : MonoBehaviour
 {
